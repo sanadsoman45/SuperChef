@@ -48,5 +48,15 @@ public class IngredientController {
 		
 	}
 	
+	@GetMapping("/getcount/{emailId}")
+	public Object getIngCount(@PathVariable("emailId") String emailId)
+	{
+		return ins.getIngCount(emailId);
+	}
 
+	@DeleteMapping("deleteall/{emailId}")
+	public String deleteAll(@PathVariable("emailId") String emailId) {
+		return ins.deleteAll(emailId);
+	}
+	
 }
