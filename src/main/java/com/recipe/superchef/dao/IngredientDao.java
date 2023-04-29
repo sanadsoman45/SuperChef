@@ -6,6 +6,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -17,9 +18,9 @@ public class IngredientDao {
 
 	@Autowired
 	SessionFactory sf;
-	
+
 	public List<Ingredients> getAllIng(String emailId) {
-		
+
 		Session session = sf.openSession();
 		Criteria cr = session.createCriteria(Ingredients.class);
 		return cr.add(Restrictions.eq("emailId", emailId)).list();
@@ -29,9 +30,18 @@ public class IngredientDao {
 		// TODO Auto-generated method stub
 		Session session = sf.openSession();
 		Transaction tr = session.beginTransaction();
-		session.save(ing);
-		tr.commit();
-		return "Ingredient "+ing.getIngName()+ " of Category "+ing.getCategory()+" has been inserted successfully." ;
+		String msg = "Ingredient already added";
+		Criteria cr = session.createCriteria(Ingredients.class);
+		int count = cr.add(Restrictions.and(Restrictions.eq("emailId", ing.getEmailId()),
+				Restrictions.eq("ingName", ing.getIngName()))).list().size();
+		if (count == 0) {
+			session.save(ing);
+			tr.commit();
+			msg = "Ingredient " + ing.getIngName() + " of Category " + ing.getCategory()
+			+ " has been inserted successfully.";
+		}
+
+		return msg;
 	}
 
 	public String deleteIng(Ingredients ing) {
@@ -43,11 +53,26 @@ public class IngredientDao {
 		query.setParameter("emailId", ing.getEmailId());
 		query.executeUpdate();
 		tr.commit();
-		return "Ingredient "+ing.getIngName()+" has been removed from the cart.";
+		return "Ingredient " + ing.getIngName() + " has been removed from the cart.";
 	}
 
-	
+	public Object getIngCount(String emailId) {
+		// TODO Auto-generated method stub
+		Session session = sf.openSession();
+		Criteria cr = session.createCriteria(Ingredients.class);
+		List rows = cr.add(Restrictions.eq("emailId", emailId)).setProjection(Projections.count("ingName")).list();
+		return rows;
+	}
 
-	
-	
+	public String deleteAll(String emailId) {
+		// TODO Auto-generated method stub
+		Session session = sf.openSession();
+		Transaction tr = session.beginTransaction();
+		Query query = session.createQuery("Delete from Ingredients where emailId = :emailId");
+		query.setParameter("emailId", emailId);
+		int count = query.executeUpdate();
+		tr.commit();
+		return "Records Deleted Successfully.";
+	}
+
 }
